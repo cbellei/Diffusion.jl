@@ -1,0 +1,10 @@
+grid:
+  nx: 256
+  ny: 256
+
+numerics:
+  nprocx: 2
+  nprocy: 1
+  max_steps: 100000000
+  dt: 1.0e-1
+  tol: 1.e-1
