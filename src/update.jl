@@ -11,19 +11,19 @@ function updateBound!(x::Array{Float64,2}, size_total_x, size_total_y, neighbors
                                 "W" => MPI.REQUEST_NULL
                                 )
     recv = Dict{String, Array{Float64,1}}()
-    boundary = Dict{String, Any}("N" => (xe[mep1]+1, ys[mep1]:ye[mep1]),
-                                 "S" => (xs[mep1]-1, ys[mep1]:ye[mep1]),
-                                 "E" => (x[xs[mep1]:xe[mep1].+1, ys[mep1]-1]),
-                                 "W" => (x[xs[mep1]:xe[mep1].-1, ys[mep1]+1])
+    ghost_boundaries = Dict{String, Any}(
+                                "N" => (xe[mep1]+1, ys[mep1]:ye[mep1]),
+                                "S" => (xs[mep1]-1, ys[mep1]:ye[mep1]),
+                                "E" => (xs[mep1]:xe[mep1], ye[mep1]+1),
+                                "W" => (xs[mep1]:xe[mep1], ys[mep1]-1)
                                 )
     is_receiving = Dict{String, Bool}("N" => false, "S" => false, "E" => false, "W" => false)
-
 
     #send
     neighbors["N"] >=0 && MPI.Isend(x[xe[mep1], ys[mep1]:ye[mep1]], neighbors["N"], me + 40, comm)
     neighbors["S"] >=0 && MPI.Isend(x[xs[mep1], ys[mep1]:ye[mep1]], neighbors["S"], me + 50, comm)
-    neighbors["E"] >=0 && MPI.Isend(x[xs[mep1]:xe[mep1], ys[mep1]], neighbors["E"], me + 60, comm)
-    neighbors["W"] >=0 && MPI.Isend(x[xs[mep1]:xe[mep1], ye[mep1]], neighbors["W"], me + 70, comm)
+    neighbors["E"] >=0 && MPI.Isend(x[xs[mep1]:xe[mep1], ye[mep1]], neighbors["E"], me + 60, comm)
+    neighbors["W"] >=0 && MPI.Isend(x[xs[mep1]:xe[mep1], ys[mep1]], neighbors["W"], me + 70, comm)
 
     #receive
     if (neighbors["N"] >= 0)
@@ -37,12 +37,12 @@ function updateBound!(x::Array{Float64,2}, size_total_x, size_total_y, neighbors
         rreq["S"] = MPI.Irecv!(recv["S"], neighbors["S"], neighbors["S"] + 40, comm)
     end
     if (neighbors["E"] >= 0)
-        recv["E"] = Array{Float64,1}(undef, ycell)
+        recv["E"] = Array{Float64,1}(undef, xcell)
         is_receiving["E"] = true
         rreq["E"] = MPI.Irecv!(recv["E"], neighbors["E"], neighbors["E"] + 70, comm)
     end
     if (neighbors["W"] >= 0)
-        recv["W"] = Array{Float64,1}(undef, ycell)
+        recv["W"] = Array{Float64,1}(undef, xcell)
         is_receiving["W"] = true
         rreq["W"] = MPI.Irecv!(recv["W"], neighbors["W"], neighbors["W"] + 60, comm)
     end
@@ -50,66 +50,9 @@ function updateBound!(x::Array{Float64,2}, size_total_x, size_total_y, neighbors
     MPI.Waitall!([rreq[k] for k in keys(rreq)])
     for (k, v) in is_receiving
         if v
-            x[boundary[k][1], boundary[k][2]] = recv[k]
+            x[ghost_boundaries[k][1], ghost_boundaries[k][2]] = recv[k]
         end
     end
-
-
-
-
-#
-#     flag = me
-#     me +=1
-#     if(me==2)
-#         println("----sending---")
-#         send = Array{Int}([1])
-#         sreq = MPI.Isend(send, 0, 21, comm)
-#     end
-#     if(me==1)
-#         println("----receiving---")
-#         recv = Array{Int}([0])
-#         rreq = MPI.Irecv!(recv, 1, 21, comm)
-#     end
-#
-#     MPI.Barrier(comm)
-#     if(me==1)
-#         println("$me :", recv)
-#     end
-
-
-
-#     me += 1
-#     flag = me
-# #   #Send my boundary to North and South
-#     neighbors["N"] >=0 && MPI.Isend(x[xe[me], ys[me]:ye[me]], neighbors["N"], me+10, comm)
-#       neighbors["S"] >=0 && MPI.Isend(x[xs[me], ys[me]:ye[me]], neighbors["S"], me+20, comm)
-# #   #Receive my boundary from North and South
-#     neighbors["N"] >=0 && MPI.Irecv!(x[xe[me]+1, ys[me]:ye[me]], neighbors["N"], neighbors["N"]+21, comm)
-#     neighbors["S"] >=0 && MPI.Irecv!(x[xs[me]-1, ys[me]:ye[me]], neighbors["S"], neighbors["S"]+11, comm)
-#
-#     flag = me + 1
-# #   #Send my boundary to East and West
-#     neighbors["E"] >=0 && MPI.Isend(x[xs[me]:xe[me], ys[me]], neighbors["E"], me+30, comm)
-#     neighbors["W"] >=0 && MPI.Isend(x[xs[me]:xe[me], ye[me]], neighbors["W"], me+40, comm)
-# #   #Receive my boundary from East and West
-#     neighbors["E"] >=0 && MPI.Irecv!(x[xs[me]:xe[me].+1, ys[me]-1], neighbors["E"], neighbors["E"]+41, comm)
-#     neighbors["W"] >=0 && MPI.Irecv!(x[xs[me]:xe[me].-1, ys[me]+1], neighbors["W"], neighbors["W"]+31, comm)
-#
-#     MPI.Barrier(comm)
-#
-#     if (neighbors["S"] >=0)
-#         println("$me: Sending  ", x[xs[me], ys[me]:ye[me]])
-#         println(me+20)
-#     end
-#     if (neighbors["N"] >= 0)
-#         sleep(0.5)
-#         println("$me: Receiving ", x[xe[me]+1, ys[me]:ye[me]])
-#         println(neighbors["N"]+21)
-#     end
-#     if(me==1)
-#         println("inside updateBound, ", neighbors["N"] >=0, " ", neighbors["N"])
-#         println("me : ",  x[xe[me]+1, ys[me]:ye[me]])
-#     end
 end
 
 
