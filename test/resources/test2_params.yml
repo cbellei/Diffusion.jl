@@ -1,6 +1,6 @@
 grid:
-  nx: 8
-  ny: 4
+  nx: 4
+  ny: 8
 
 numerics:
   nprocx: 1
@@ -10,4 +10,4 @@ numerics:
   tol: 1.0
 
 output:
-  filename: "reference_8x4_output.dat"
+  filename: "test2.dat"

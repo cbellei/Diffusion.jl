@@ -1,24 +1,7 @@
-using DelimitedFiles
-using Formatting
 using Printf
 
-function write_array_to_disk(x0::Array{Float64,2}, size_total_x::Int, size_total_y::Int)
-    filename = "outputarrayJulia.dat"
-    f = open(filename, "w")
-    for i = 1:size_total_x
-        for j = 1:size_total_y
-            print(f, @sprintf("%7.3f", x0[i,j]))
-            print(f, "\t")
-        end
-        print(f, "\n")
-    end
-    close(f)
-end
-
-
 function write_to_disk(x::Array{Float64,1}, x_domains::Int, y_domains::Int,
-                        xcell::Int, ycell::Int)
-    filename = "outputJulia.dat"
+                        xcell::Int, ycell::Int, filename:: String)
     f = open(filename, "w")
     c = 0
     for k=1:x_domains

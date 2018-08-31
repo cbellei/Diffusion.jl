@@ -1,9 +1,9 @@
 import YAML
 
-function get_sim_params()
-    path = "./runs/run01/run01.yml"
+function get_sim_params(ARGS)
 
-    data = YAML.load(open("src/params.yml"))
+    path = ARGS[1]
+    data = YAML.load(open(path))
 
     key = "grid"
     Nx = data[key]["nx"]
@@ -16,5 +16,15 @@ function get_sim_params()
     Dt = data[key]["dt"]
     TOL = data[key]["tol"]
 
-    return Int64[Nx, Ny, NPROCX, NPROCY, MAX_STEPS], Float64[Dt, TOL]
+    key = "output"
+    filename = data[key]["filename"]
+    workdir = join(split(path,"/")[1:end-1],"/")
+    output_path = join([workdir, filename], "/")
+
+    println()
+    println("Loading: ", path)
+    println("Output: ", output_path)
+
+    return Int64[Nx, Ny, NPROCX, NPROCY, MAX_STEPS], Float64[Dt, TOL], output_path
+
 end

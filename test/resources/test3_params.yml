@@ -3,11 +3,11 @@ grid:
   ny: 4
 
 numerics:
-  nprocx: 1
+  nprocx: 2
   nprocy: 1
   max_steps: 100000000
   dt: 1.0e-1
   tol: 1.0
 
 output:
-  filename: "reference_8x4_output.dat"
+  filename: "test3.dat"

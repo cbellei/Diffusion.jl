@@ -10,4 +10,4 @@ numerics:
   tol: 1.0
 
 output:
-  filename: "reference_8x4_output.dat"
+  filename: "test1.dat"

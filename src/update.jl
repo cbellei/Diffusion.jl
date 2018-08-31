@@ -71,7 +71,6 @@ function computeNext!(x0::Array{Float64,2}, x::Array{Float64,2},
     # |                                                                                           |
     # |                                    weightx * x[i+1][j]                                    |
 
-
     me += 1
 
     diagx = Float64(-2.0 + hx * hx / (2 * k0 * dt))
@@ -89,15 +88,6 @@ function computeNext!(x0::Array{Float64,2}, x::Array{Float64,2},
                 weighty * (x0[i,j-1] + x0[i,j+1] + x0[i,j]*diagy)
         end
     end
-
-#     if (me-1==1)
-#         println(xs[me], " ", xe[me], " ", ys[me], " " , ye[me])
-#         println(x0[8,:])
-#         println(x0[9,:])
-#         println(x0[9,:])
-#         println()
-#         println(x[9,:])
-#     end
 
    #Compute the difference into domain for convergence.
    #Update the value x0(i,j).
