@@ -21,8 +21,8 @@ reference_8x4_output = readdlm("test/resources/reference_8x4_output.dat")
         run(cmd)
         nx = 4
         ny = 8
-        expected = transpose(reshape(reference_8x4_output, nx, ny))
-        actual = reshape(readdlm("test/resources/test2.dat"), ny, nx)
+        expected = transpose(reshape(reference_8x4_output, nx + 2, ny + 2))
+        actual = reshape(readdlm("test/resources/test2.dat"), ny + 2, nx + 2)
         @test all(actual .≈ expected)
     end;
 
@@ -39,8 +39,8 @@ reference_8x4_output = readdlm("test/resources/reference_8x4_output.dat")
         run(cmd)
         nx = 4
         ny = 8
-        expected = transpose(reshape(reference_8x4_output, nx, ny))
-        actual = reshape(readdlm("test/resources/test4.dat"), ny, nx)
+        expected = transpose(reshape(reference_8x4_output, nx + 2, ny + 2))
+        actual = reshape(readdlm("test/resources/test4.dat"), ny + 2, nx + 2)
         @test all(actual .≈ expected)
     end;
 
@@ -57,8 +57,8 @@ reference_8x4_output = readdlm("test/resources/reference_8x4_output.dat")
         run(cmd)
         nx = 4
         ny = 8
-        expected = transpose(reshape(reference_8x4_output, nx, ny))
-        actual = reshape(readdlm("test/resources/test6.dat"), ny, nx)
+        expected = transpose(reshape(reference_8x4_output, nx + 2, ny + 2))
+        actual = reshape(readdlm("test/resources/test6.dat"), ny + 2, nx + 2)
         @test all(actual .≈ expected)
     end;
 

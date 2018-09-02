@@ -152,7 +152,7 @@ end
 #Perform gathering
 xfinal = MPI.Gather(xtemp, root, comm)
 if (my_id == 0)
-    write_to_disk(xfinal[:], nx_domains, ny_domains, xcell, ycell, output_path)
+    write_to_disk(xfinal[:], nx_domains, ny_domains, xcell, ycell, temp1_init, output_path)
 end
 
 MPI.Finalize()
