@@ -5,7 +5,7 @@ the Message Passing Interface (MPI) paradigm. For more information, please have 
 <a href="http://www.claudiobellei.com/2018/09/30/julia-mpi/">this blog post</a>.
 
 ## Installation
-* In your target folder, clone the repository with the command:
+In your target folder, clone the repository with the command:
 ```git clone https://github.com/cbellei/Diffusion.jl.git```
 
 ## Dependencies
