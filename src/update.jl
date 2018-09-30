@@ -1,4 +1,4 @@
-function updateBound!(x::Array{Float64,2}, size_total_x, size_total_y, neighbors, comm,
+function updateBound!(u::Array{Float64,2}, size_total_x, size_total_y, neighbors, comm,
                        me, xs, ys, xe, ye, xcell, ycell, nproc)
 
     mep1 = me + 1
@@ -20,10 +20,10 @@ function updateBound!(x::Array{Float64,2}, size_total_x, size_total_y, neighbors
     is_receiving = Dict{String, Bool}("N" => false, "S" => false, "E" => false, "W" => false)
 
     #send
-    neighbors["N"] >=0 && MPI.Isend(x[xe[mep1], ys[mep1]:ye[mep1]], neighbors["N"], me + 40, comm)
-    neighbors["S"] >=0 && MPI.Isend(x[xs[mep1], ys[mep1]:ye[mep1]], neighbors["S"], me + 50, comm)
-    neighbors["E"] >=0 && MPI.Isend(x[xs[mep1]:xe[mep1], ye[mep1]], neighbors["E"], me + 60, comm)
-    neighbors["W"] >=0 && MPI.Isend(x[xs[mep1]:xe[mep1], ys[mep1]], neighbors["W"], me + 70, comm)
+    neighbors["N"] >=0 && MPI.Isend(u[xe[mep1], ys[mep1]:ye[mep1]], neighbors["N"], me + 40, comm)
+    neighbors["S"] >=0 && MPI.Isend(u[xs[mep1], ys[mep1]:ye[mep1]], neighbors["S"], me + 50, comm)
+    neighbors["E"] >=0 && MPI.Isend(u[xs[mep1]:xe[mep1], ye[mep1]], neighbors["E"], me + 60, comm)
+    neighbors["W"] >=0 && MPI.Isend(u[xs[mep1]:xe[mep1], ys[mep1]], neighbors["W"], me + 70, comm)
 
     #receive
     if (neighbors["N"] >= 0)
@@ -50,13 +50,13 @@ function updateBound!(x::Array{Float64,2}, size_total_x, size_total_y, neighbors
     MPI.Waitall!([rreq[k] for k in keys(rreq)])
     for (k, v) in is_receiving
         if v
-            x[ghost_boundaries[k][1], ghost_boundaries[k][2]] = recv[k]
+            u[ghost_boundaries[k][1], ghost_boundaries[k][2]] = recv[k]
         end
     end
 end
 
 
-function computeNext!(x0::Array{Float64,2}, x::Array{Float64,2},
+function computeNext!(u0::Array{Float64,2}, u::Array{Float64,2},
     size_total_x::Int, size_total_y::Int, dt::Float64, hx::Float64, hy::Float64,
     me::Int, xs::Array{Int,1}, ys::Array{Int,1}, xe::Array{Int,1}, ye::Array{Int,1},
     nproc::Int, k0::Float64)
@@ -65,13 +65,13 @@ function computeNext!(x0::Array{Float64,2}, x::Array{Float64,2},
     # on a regular rectangular grid using a five point finite difference
     # scheme in space is :
     #
-    # |                                    weightx * x[i-1][j]                                    |
+    # |                                    weightx * u[i-1][j]                                    |
     # |                                                                                           |
-    # | weighty * x[i][j-1]   (diagx * weightx + diagy * weighty) * x[i][j]   weighty * x[i][j+1] |
+    # | weighty * u[i][j-1]   (diagx * weightx + diagy * weighty) * u[i][j]   weighty * u[i][j+1] |
     # |                                                                                           |
-    # |                                    weightx * x[i+1][j]                                    |
+    # |                                    weightx * u[i+1][j]                                    |
 
-    me += 1
+    mep1 = me + 1
 
     diagx = Float64(-2.0 + hx * hx / (2 * k0 * dt))
     diagy = Float64(-2.0 + hy * hy / (2 * k0 * dt))
@@ -82,23 +82,23 @@ function computeNext!(x0::Array{Float64,2}, x::Array{Float64,2},
     #Optimization : inner loop on column index (second index) since
     #Julia is row major
     diff = 0.0
-    for i = xs[me]:xe[me]
-        for j = ys[me]:ye[me]
-            x[i,j] = weightx * (x0[i-1,j] + x0[i+1,j] + x0[i,j]*diagx) +
-                weighty * (x0[i,j-1] + x0[i,j+1] + x0[i,j]*diagy)
+    for i = xs[mep1]:xe[mep1]
+        for j = ys[mep1]:ye[mep1]
+            u[i,j] = weightx * (u0[i-1,j] + u0[i+1,j] + u0[i,j]*diagx) +
+                weighty * (u0[i,j-1] + u0[i,j+1] + u0[i,j]*diagy)
         end
     end
 
    #Compute the difference into domain for convergence.
-   #Update the value x0(i,j).
+   #Update the value u0(i,j).
    #Optimization : inner loop on column index (second index) since
    #Julia is row major
    diff = 0.0
-   for j = ys[me]:ye[me]
-     for i = xs[me]:xe[me]
-        ldiff = x0[i,j] - x[i,j]
+   for j = ys[mep1]:ye[mep1]
+     for i = xs[mep1]:xe[mep1]
+        ldiff = u0[i,j] - u[i,j]
         diff = diff + ldiff * ldiff
-        x0[i,j] = x[i,j]
+        u0[i,j] = u[i,j]
      end
    end
 

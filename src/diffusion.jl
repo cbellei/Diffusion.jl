@@ -12,12 +12,12 @@ function main()
 
 #temp1_init: temperature init on borders
 temp1_init = 10.0
-#temp2_init: temperature init inside
+#temp2_init: temperature init inside domain
 temp2_init = -10.0
 #diffusion coefficient
 k0 = Float64(1)
 
-#define rank of root
+#define rank of root process
 root = 0
 
 #MPI Initialization
@@ -26,6 +26,7 @@ comm = MPI.COMM_WORLD
 my_id = MPI.Comm_rank(comm)
 nproc = MPI.Comm_size(comm)
 
+#simulation parameters
 params_int = Array{Int64}(undef, 5)
 params_double = Array{Float64}(undef, 2)
 if (my_id == root)
@@ -46,7 +47,7 @@ epsilon   = params_double[2]
 
 #Warning message if dimensions and number of processes don't match
 if ((my_id == root) && (nproc != (nx_domains * ny_domains)))
-    println("Number of processes not equal to Number of subdomains")
+    println("ERROR - Number of processes not equal to number of subdomains")
 end
 
 #Various other variables
@@ -54,50 +55,54 @@ size_global_x = size_x + 2
 size_global_y = size_y + 2
 hx = Float64(1.0 / size_global_x)
 hy = Float64(1.0 / size_global_y)
-dt2 = 0.25 * min(hx, hy)^2 / k0
-size_total_x = size_x + 2 * nx_domains + 2
-size_total_y = size_y + 2 * ny_domains + 2
+dt2 = 0.25 * min(hx, hy)^2 / k0 #fraction of CFL condition
+size_total_x = size_x + 2 * nx_domains + 2 #including ghost cells
+size_total_y = size_y + 2 * ny_domains + 2 #including ghost cells
 
 #Take a right time step for convergence
 if (dt1 >= dt2)
     if (my_id == 0)
         println()
-        println("Time step too large in ''param'' file -',
-            Taking convergence criterion")
+        println("Time step too large ==> Taking convergence criterion")
     end
     dt = dt2
 else
     dt = dt1
 end
 
-xfinal = oneDArray(Float64, size_x * size_y)
-x = twoDArray(size_total_x, size_total_y)
-x0 = twoDArray(size_total_x, size_total_y)
+#2D solution including ghost cells
+u0 = twoDArray(Float64, size_total_x, size_total_y)
+u = twoDArray(Float64, size_total_x, size_total_y)
 
-#Allocate coordinates of processes
+#Allocate coordinates of processes (start cell, end cell)
 xs = oneDArray(Int, nproc)
 xe = oneDArray(Int, nproc)
 ys = oneDArray(Int, nproc)
 ye = oneDArray(Int, nproc)
 
-#Size of each domain
+#Size of each physical domain
 xcell = Int(size_x / nx_domains)
 ycell = Int(size_y / ny_domains)
 
-#Allocate temperature vector (cell-centered)
-xtemp = oneDArray(Float64, xcell * ycell)
+#allocate flattened (1D) local physical solution (i.e., relative to sub-domain)
+u_local = oneDArray(Float64, xcell * ycell)
+#allocate flattened (1D) global physical solution
+u_global = oneDArray(Float64, size_x * size_y)
 
+#find processes surrounding mine (if they exist)
 my_neighbors = neighbors(my_id, nproc, nx_domains, ny_domains)
 
-#Compute xs, xe, ys, ye for each cell on the grid
-processToMap!(xs, ys, xe, ye, xcell, ycell, nx_domains, ny_domains, nproc)
+#compute coordinates of processes for each sub-domain
+process_coordinates!(xs, ys, xe, ye, xcell, ycell, nx_domains, ny_domains, nproc)
 
-init_values(x0, size_total_x, size_total_y, temp1_init, temp2_init)
+#initialize domain
+init_values(u0, size_total_x, size_total_y, temp1_init, temp2_init)
 
-updateBound!(x0, size_total_x, size_total_y, my_neighbors, comm,
+#update ghost cells
+updateBound!(u0, size_total_x, size_total_y, my_neighbors, comm,
             my_id, xs, ys, xe, ye, xcell, ycell, nproc)
 
-#Initialize step and time
+#Initialize step, time and convergence boolean
 step = 0
 t = 0.0
 converged = false
@@ -109,50 +114,50 @@ end
 
 #Main loop : until convergence
 while (!converged)
-    #Increment step and time
+    #increment step and time
     step += 1
     t += dt
-    #Perform one step of the explicit scheme
-    local_diff = computeNext!(x0, x, size_total_x, size_total_y, dt, hx, hy,
+    #perform one step of the explicit scheme
+    local_diff = computeNext!(u0, u, size_total_x, size_total_y, dt, hx, hy,
         my_id, xs, ys, xe, ye, nproc, k0)
 
-    #Update the partial solution along the interface
-    updateBound!(x0, size_total_x, size_total_y, my_neighbors, comm,
+    #update ghost cells
+    updateBound!(u0, size_total_x, size_total_y, my_neighbors, comm,
         my_id, xs, ys, xe, ye, xcell, ycell, nproc)
 
     MPI.Barrier(comm)
 
-    #Sum reduction to get global difference
+    #sum local_diff to get global difference
     global_diff = MPI.Allreduce(local_diff, MPI.SUM, comm)
-
-    #Current global difference with convergence
     global_diff = sqrt(global_diff)
-    #Break if convergence reached or step greater than maxStep
+    #break if convergence reached or step greater than maxStep
     if ((global_diff <= epsilon) || (step >= maxStep))
         converged = true
     end
 end
 
-
-#Ending time
+#get ending time
 if (my_id == 0)
     time_final = time()
-    #Elapsed time
+    #elapsed time
     elapsed_time = time_final - time_init
     println("Elapsed time = ", elapsed_time)
     println("Steps = ", step)
 end
 
+#find solution on my sub-domain (as a 1-dimensional array)
 i = 1
 for j = ys[my_id+1]:ye[my_id+1]
-    xtemp[(i-1)*xcell+1:i*xcell] = x0[xs[my_id+1]:xe[my_id+1],j]
+    u_local[(i-1)*xcell+1:i*xcell] = u0[xs[my_id+1]:xe[my_id+1],j]
     i = i+1
 end
 
-#Perform gathering
-xfinal = MPI.Gather(xtemp, root, comm)
+#gather local solution to global solution (as a 1-dimensional array)
+u_global = MPI.Gather(u_local, root, comm)
+
+#write to disk
 if (my_id == 0)
-    write_to_disk(xfinal[:], nx_domains, ny_domains, xcell, ycell, temp1_init, output_path)
+    write_to_disk(u_global, nx_domains, ny_domains, xcell, ycell, temp1_init, output_path)
 end
 
 MPI.Finalize()

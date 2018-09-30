@@ -33,6 +33,7 @@ function init_values(x0::Array{Float64,2}, size_total_x::Int, size_total_y::Int,
 end
 
 function neighbors(my_id::Int, nproc::Int, nx_domains::Int, ny_domains::Int)
+    #find all processes that are my neighbors
     id_pos = Array{Int,2}(undef, nx_domains, ny_domains)
     for id = 0:nproc-1
         n_row = (id+1) % nx_domains > 0 ? (id+1) % nx_domains : nx_domains
@@ -58,7 +59,7 @@ function neighbors(my_id::Int, nproc::Int, nx_domains::Int, ny_domains::Int)
     return neighbors
 end
 
-function processToMap!(xs::Array{Int}, ys::Array{Int}, xe::Array{Int},
+function process_coordinates!(xs::Array{Int}, ys::Array{Int}, xe::Array{Int},
     ye::Array{Int}, xcell::Int, ycell::Int, nx_domains::Int, ny_domains::Int, nproc::Int)
 
     #Computation of starting ys,ye on (Ox) standard axis
