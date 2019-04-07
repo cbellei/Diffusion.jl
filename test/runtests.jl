@@ -26,7 +26,7 @@ end;
     reference_8x4_output = readdlm("test/resources/reference_8x4_output.dat")
 
     @testset "1 process, 8x4 grid" begin
-        cmd = `mpirun -np 1 julia src/diffusion.jl test/resources/test1_params.yml`
+        cmd = `mpirun -np 1 julia src/Diffusion.jl test/resources/test1_params.yml`
         run(cmd)
         expected = reference_8x4_output
         actual = readdlm("test/resources/test1.dat")
@@ -34,7 +34,7 @@ end;
     end;
 
     @testset "1 process, 4x8 grid" begin
-        cmd = `mpirun -np 1 julia src/diffusion.jl test/resources/test2_params.yml`
+        cmd = `mpirun -np 1 julia src/Diffusion.jl test/resources/test2_params.yml`
         run(cmd)
         nx = 4
         ny = 8
@@ -44,7 +44,7 @@ end;
     end;
 
     @testset "2x1 processes, 8x4 grid" begin
-        cmd = `mpirun -np 2 julia src/diffusion.jl test/resources/test3_params.yml`
+        cmd = `mpirun -np 2 julia src/Diffusion.jl test/resources/test3_params.yml`
         run(cmd)
         expected = reference_8x4_output
         actual = readdlm("test/resources/test3.dat")
@@ -52,7 +52,7 @@ end;
     end;
 
     @testset "2x1 processes, 4x8 grid" begin
-        cmd = `mpirun -np 2 julia src/diffusion.jl test/resources/test4_params.yml`
+        cmd = `mpirun -np 2 julia src/Diffusion.jl test/resources/test4_params.yml`
         run(cmd)
         nx = 4
         ny = 8
@@ -62,7 +62,7 @@ end;
     end;
 
     @testset "1x2 processes, 8x4 grid" begin
-        cmd = `mpirun -np 2 julia src/diffusion.jl test/resources/test5_params.yml`
+        cmd = `mpirun -np 2 julia src/Diffusion.jl test/resources/test5_params.yml`
         run(cmd)
         expected = reference_8x4_output
         actual = readdlm("test/resources/test5.dat")
@@ -70,7 +70,7 @@ end;
     end;
 
     @testset "1x2 processes, 4x8 grid" begin
-        cmd = `mpirun -np 2 julia src/diffusion.jl test/resources/test6_params.yml`
+        cmd = `mpirun -np 2 julia src/Diffusion.jl test/resources/test6_params.yml`
         run(cmd)
         nx = 4
         ny = 8

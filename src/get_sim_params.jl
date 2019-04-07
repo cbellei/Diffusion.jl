@@ -3,6 +3,7 @@ import YAML
 function get_sim_params(ARGS)
 
     path = ARGS[1]
+    #path = "src/example.yml"
     data = YAML.load(open(path))
 
     key = "grid"
