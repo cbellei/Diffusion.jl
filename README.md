@@ -28,7 +28,7 @@ The parameters that are required are:
 If you want to run a simulation with a number of processes equal to `nproc`, and the simulation parameters are
 contained in the file `src/example.yml`, then you should type on the Terminal
 ```
-mpirun -np nproc src/diffusion.jl src/example.yml
+mpirun -np nproc julia src/diffusion.jl src/example.yml
 ```
 
 ### Running tests
