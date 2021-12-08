@@ -2,3 +2,8 @@ name = "Diffusion"
 uuid = "1f3322da-561f-11e9-2130-1bf21679132b"
 authors = ["gaelforget <gforget@mit.edu>"]
 version = "0.1.0"
+
+[deps]
+MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
