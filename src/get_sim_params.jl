@@ -19,8 +19,8 @@ function get_sim_params(ARGS)
 
     key = "output"
     filename = data[key]["filename"]
-    workdir = join(split(path,"/")[1:end-1],"/")
-    output_path = join([workdir, filename], "/")
+    workdir = dirname(path)
+    output_path = joinpath(workdir, basename(filename))
 
     println()
     println("Loading: ", path)
