@@ -1,6 +1,6 @@
 name = "Diffusion"
 uuid = "1f3322da-561f-11e9-2130-1bf21679132b"
-authors = ["gaelforget <gforget@mit.edu>"]
+authors = ["cbellei"]
 version = "0.1.0"
 
 [deps]
