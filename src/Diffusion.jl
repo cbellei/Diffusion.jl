@@ -1,3 +1,5 @@
+module Diffusion
+
 import MPI
 
 include("types.jl")
@@ -5,8 +7,6 @@ include("init.jl")
 include("get_sim_params.jl")
 include("update.jl")
 include("io.jl")
-include("get_sim_params.jl")
-
 
 function main()
 
@@ -165,4 +165,6 @@ MPI.Finalize()
 end
 
 
-main()
+#main()
+
+end
